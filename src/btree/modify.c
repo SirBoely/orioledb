@@ -1481,7 +1481,7 @@ o_btree_autonomous_delete(BTreeDescr *desc, OTuple key, BTreeKeyType keyType,
 	OAutonomousTxState state;
 	OBTreeModifyResult result;
 
-	Assert(keyType == BTreeKeyLeafTuple || keyType == BTreeKeyNonLeafKey);
+	Assert(keyType == BTreeKeyLeafTuple);
 
 	if (desc->storageType == BTreeStoragePersistence)
 	{
@@ -1495,10 +1495,7 @@ o_btree_autonomous_delete(BTreeDescr *desc, OTuple key, BTreeKeyType keyType,
 										   RowLockUpdate,
 										   hint, BTreeLeafTupleNonDeleted,
 										   &nullCallbackInfo);
-			if (keyType == BTreeKeyLeafTuple)
-				o_wal_delete(desc, key);
-			else if (keyType == BTreeKeyNonLeafKey)
-				o_wal_delete_key(desc, key);
+			o_wal_delete(desc, key, REPLICA_IDENTITY_DEFAULT);
 		}
 		PG_CATCH();
 		{

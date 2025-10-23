@@ -827,7 +827,7 @@ o_sys_cache_update(OSysCache *sys_cache, Pointer updated_entry)
 				OBTreeModifyResultUpdated;
 
 			if (result)
-				o_wal_update(desc, tup);
+				o_wal_update(desc, tup, REPLICA_IDENTITY_DEFAULT);  //?
 		}
 		PG_CATCH();
 		{

@@ -164,7 +164,6 @@ extern XLogRecPtr log_logical_wal_container(Pointer ptr, int length);
 extern void o_wal_insert(BTreeDescr *desc, OTuple tuple);
 extern void o_wal_update(BTreeDescr *desc, OTuple tuple);
 extern void o_wal_delete(BTreeDescr *desc, OTuple tuple);
-extern void o_wal_delete_key(BTreeDescr *desc, OTuple key);
 extern void o_wal_reinsert(BTreeDescr *desc, OTuple oldtuple, OTuple newtuple);
 extern void add_truncate_wal_record(ORelOids oids);
 extern bool get_local_wal_has_material_changes(void);

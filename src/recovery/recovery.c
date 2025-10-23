@@ -1678,7 +1678,7 @@ recovery_rec_insert(BTreeDescr *desc, OTuple tuple, bool *allocated, int *size)
 }
 
 OTuple
-recovery_rec_update(BTreeDescr *desc, OTuple tuple, bool *allocated, int *size)
+recovery_rec_update(BTreeDescr *desc, OTuple tuple, OTuple oldtuple, bool *allocated, int *size)
 {
 	*allocated = false;
 	*size = o_btree_len(desc, tuple, OTupleLength);
@@ -1686,21 +1686,22 @@ recovery_rec_update(BTreeDescr *desc, OTuple tuple, bool *allocated, int *size)
 }
 
 OTuple
-recovery_rec_delete(BTreeDescr *desc, OTuple tuple, bool *allocated, int *size)
+recovery_rec_delete(BTreeDescr *desc, OTuple tuple, bool *allocated, int *size, char relreplident)
 {
-	OTuple		key;
+	OTuple	     key;
 
-	key = o_btree_tuple_make_key(desc, tuple, NULL, true, allocated);
-	*size = o_btree_len(desc, key, OKeyLength);
-	return key;
-}
-
-OTuple
-recovery_rec_delete_key(BTreeDescr *desc, OTuple key, bool *allocated, int *size)
-{
-	*allocated = false;
-	*size = o_btree_len(desc, key, OKeyLength);
-	return key;
+	if (relreplident == REPLICA_IDENTITY_FULL)
+	{
+		*allocated = false;
+		*size = o_btree_len(desc, tuple, OTupleLength);
+		return tuple;
+	}
+	else
+	{
+		*size = o_btree_len(desc, tuple, OKeyLength); // OKeyLength or OTupleLength ?
+		key = o_btree_tuple_make_key(desc, tuple, NULL, true, allocated);
+		return key;
+	}
 }
 
 /*

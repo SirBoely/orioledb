@@ -253,10 +253,16 @@ delete_old_bridge_index_ctid(OTableDescr *descr, Relation relation,
 	if (primary->desc.storageType == BTreeStoragePersistence)
 	{
 		OTuple		keyTuple;
+		OTuple		tuple;
 
 		keyTuple.formatFlags = O_TUPLE_FLAGS_FIXED_FORMAT;
 		keyTuple.data = (Pointer) &bridge_oslot->bridge_ctid;
-		o_wal_delete_key(&descr->bridge->desc, keyTuple);
+
+		tuple = o_btree_find_tuple_by_key(&descr->bridge->desc,					// ?
+                                                                          &keyTuple, BTreeKeyNonLeafKey,
+                                                                          &o_in_progress_snapshot, NULL,
+                                                                          CurrentMemoryContext, NULL);
+		o_wal_delete(&descr->bridge->desc, tuple);
 		flush_local_wal(false);
 	}
 
@@ -281,6 +287,8 @@ o_tbl_insert(OTableDescr *descr, Relation relation,
 		.needsUndoForSelfCreated = false,
 		.arg = slot
 	};
+
+	CheckCmdReplicaIdentity(rel, CMD_INSERT);
 
 	if (slot->tts_ops != descr->newTuple->tts_ops ||
 		(((OTableSlot *) slot)->descr != NULL &&
@@ -675,6 +683,8 @@ o_tbl_update(OTableDescr *descr, TupleTableSlot *slot,
 	OIndexDescr *primary = GET_PRIMARY(descr);
 	bool		touched_indices = false;
 
+	CheckCmdReplicaIdentity(rel, CMD_UPDATE);
+
 	if (slot->tts_ops != descr->newTuple->tts_ops)
 	{
 		ExecCopySlot(descr->newTuple, slot);
@@ -915,6 +925,8 @@ o_tbl_delete(Relation rel, OTableDescr *descr, OBTreeKeyBound *primary_key,
 			 BTreeLocationHint *hint, OModifyCallbackArg *arg)
 {
 	OTableModifyResult result;
+
+	CheckCmdReplicaIdentity(rel, CMD_DELETE);
 
 	result = o_tbl_indices_delete(descr, primary_key, oxid,
 								  csn, hint, arg);
